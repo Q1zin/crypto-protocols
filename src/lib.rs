@@ -1,5 +1,6 @@
 pub mod diffie_hellman;
 pub mod math;
+pub mod shamir;
 
 use std::io::{self, Write};
 
