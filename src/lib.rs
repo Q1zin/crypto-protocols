@@ -1,3 +1,4 @@
+pub mod diffie_hellman;
 pub mod math;
 
 use std::io::{self, Write};
