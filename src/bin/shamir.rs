@@ -1,22 +1,32 @@
 //! Лабораторная 2.21 — шифр Шамира.
 //! Запуск: cargo run --bin shamir
 
-use crypto_protocols::read_number;
+use crypto_protocols::math::{inverse, is_prime};
 use crypto_protocols::shamir::{generate_keys, transmit};
+use crypto_protocols::{read_number, read_optional};
 
 fn main() {
-    let p = 30803;
+    let p = read_optional("p (Enter — 30803): ").unwrap_or(30803);
+    if p < 11 || !is_prime(p) {
+        println!("p должно быть простым и не меньше 11");
+        return;
+    }
+
+    // Каждый абонент выбирает свою пару c, d.
+    let Some((c_a, d_a)) = read_keys("A", p) else {
+        return;
+    };
+    let Some((c_b, d_b)) = read_keys("B", p) else {
+        return;
+    };
+    println!("A: c_A = {c_a}, d_A = {d_a}");
+    println!("B: c_B = {c_b}, d_B = {d_b}");
+
     let m = read_number(&format!("Сообщение m (меньше {p}): "));
     if m >= p {
         println!("Сообщение должно быть меньше p = {p}");
         return;
     }
-
-    // Каждый абонент выбирает свою пару c, d.
-    let (c_a, d_a) = generate_keys(p);
-    let (c_b, d_b) = generate_keys(p);
-    println!("A: c_A = {c_a}, d_A = {d_a}");
-    println!("B: c_B = {c_b}, d_B = {d_b}");
 
     let (x1, x2, x3, x4) = transmit(m, p, c_a, d_a, c_b, d_b);
     println!("Шаг 1. A -> B: x1 = {m}^{c_a} mod {p} = {x1}");
@@ -28,5 +38,20 @@ fn main() {
         println!("B получил сообщение m = {x4}");
     } else {
         println!("Ошибка: x4 != m");
+    }
+}
+
+/// Пара (c, d) абонента: c вводит пользователь или выбираем случайно,
+/// d = c^(-1) mod (p - 1). None — если введённое c не подходит.
+fn read_keys(name: &str, p: u64) -> Option<(u64, u64)> {
+    match read_optional(&format!("c_{name} (Enter — случайное): ")) {
+        None => Some(generate_keys(p)),
+        Some(c) => match inverse(c, p - 1) {
+            Some(d) => Some((c, d)),
+            None => {
+                println!("c_{name} должно быть взаимно просто с p - 1 = {}", p - 1);
+                None
+            }
+        },
     }
 }
