@@ -1,9 +1,9 @@
 //! Лабораторная 2.21 — шифр Шамира.
 //! Запуск: cargo run --bin shamir
 
-use crypto_protocols::math::{inverse, is_prime};
-use crypto_protocols::shamir::{generate_keys, transmit};
-use crypto_protocols::{read_number, read_optional};
+use crypto_protocols::math::is_prime;
+use crypto_protocols::shamir::transmit;
+use crypto_protocols::{read_keys, read_number, read_optional};
 
 fn main() {
     let p = read_optional("p (Enter — 30803): ").unwrap_or(30803);
@@ -38,20 +38,5 @@ fn main() {
         println!("B получил сообщение m = {x4}");
     } else {
         println!("Ошибка: x4 != m");
-    }
-}
-
-/// Пара (c, d) абонента: c вводит пользователь или выбираем случайно,
-/// d = c^(-1) mod (p - 1). None — если введённое c не подходит.
-fn read_keys(name: &str, p: u64) -> Option<(u64, u64)> {
-    match read_optional(&format!("c_{name} (Enter — случайное): ")) {
-        None => Some(generate_keys(p)),
-        Some(c) => match inverse(c, p - 1) {
-            Some(d) => Some((c, d)),
-            None => {
-                println!("c_{name} должно быть взаимно просто с p - 1 = {}", p - 1);
-                None
-            }
-        },
     }
 }
